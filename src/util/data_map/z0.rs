@@ -1,3 +1,4 @@
+use std::marker::PhantomData;
 use std::option::Option;
 use std::vec::Vec;
 
@@ -7,11 +8,12 @@ pub struct Node<Record> {
     pub record: Option<Record>
 }
 
-pub struct DataMap<Record> {
-    root_node: Node<Record>
+pub struct DataMap<'a, Record> {
+    root_node: Node<Record>,
+    _marker: PhantomData<&'a ()>
 }
 
-impl<Record> crate::util::data_map::DataMap<Record> for DataMap<Record> {
+impl<'a, Record> crate::util::data_map::DataMap<Record> for DataMap<'a, Record> {
     type Key = &'a str;
 
     fn get_record(&mut self, label: Self::Key) -> &Option<Record> {
@@ -29,7 +31,7 @@ impl<Record> crate::util::data_map::DataMap<Record> for DataMap<Record> {
     }
 }
 
-impl<Record> DataMap<Record> {
+impl<'a, Record> DataMap<'a, Record> {
     pub fn get_mutable_node(&mut self, label: &str, create_missing_branches: bool) -> Option<&mut Node<Record>> {
         let mut path = label.chars();
         let mut selector: &mut Node<Record> = &mut self.root_node;
@@ -66,14 +68,15 @@ impl<Record> DataMap<Record> {
     }
 }
 
-impl<Record> Default for DataMap<Record> {
+impl<'a, Record> Default for DataMap<'a, Record> {
     fn default()-> Self {
         Self {
             root_node: Node {
                 character: '\0',
                 children: Vec::new(),
                 record: None
-            }
+            },
+            _marker: PhantomData::default()
         }
     }
 }
