@@ -7,7 +7,15 @@ enum Tokens {
 }
 
 fn main() {
-    let lexer = Lexer::new("abc { }");
+    let mut lexer = Lexer::new("abc { }");
 
+    {
+        let processors = lexer.get_processors();
 
+        processors.push(&|traverser| {
+            println!("Called Lexer");
+        });
+    }
+
+    lexer.start();
 }
