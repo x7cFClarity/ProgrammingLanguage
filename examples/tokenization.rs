@@ -9,13 +9,12 @@ enum Tokens {
 fn main() {
     let mut lexer = Lexer::new("abc { }");
 
-    {
-        let processors = lexer.get_processors();
+    let processors = lexer.get_processors();
 
-        processors.push(&|traverser| {
-            println!("Called Lexer");
-        });
-    }
+    processors.push(&|traverser| {
+        traverser.read_symbol(10);
+        traverser
+    });
 
     lexer.start();
 }

@@ -1,36 +1,29 @@
+use std::cell::RefCell;
+use std::ops::DerefMut;
+use std::rc::Rc;
 use std::str::Chars;
 use crate::util::stream::ReadStream;
 
 pub struct SymbolReader<'a> {
     symbol_pointer: usize,
-    characters_iter: Chars<'a>,
-    characters: Vec<char>
+    characters_iter: RefCell<Chars<'a>>
 }
 
 impl<'a> SymbolReader<'a> {
-    pub fn new(characters_iter: Chars) -> Self {
+    pub fn new(start_index: usize, characters_iter: RefCell<Chars<'a>>) -> Self {
         Self {
-            symbol_pointer: 0,
-            characters_iter,
-            characters: Vec::new()
+            symbol_pointer: start_index,
+            characters_iter
         }
     }
 
     pub fn read_symbol(&self, offset: usize) -> Option<char> {
-        let pointer = self.symbol_pointer + offset;
-        if (self.characters.len() < pointer) {
-            Some('a')
-        } else {
-            None
-        }
+        println!("Reading symbol {}", offset);
+        None
     }
 
-    pub fn read_next_symbol(capture: bool) {
-
-    }
-
-    pub fn capture_next_symbol() {
-
+    pub fn capture_next_symbol(&mut self) -> Option<char> {
+        return self.characters_iter.borrow_mut().next();
     }
 }
 
@@ -46,25 +39,27 @@ pub enum Error {
 }
 
 pub struct Lexer<'a> {
-    source_input: &'a str,
-    processors: Vec<&'a dyn Fn(SymbolReader)>
+    source_characters: RefCell<Chars<'a>>,
+    processors: Vec<&'a dyn Fn(SymbolReader) -> SymbolReader>,
+    current_index: usize
 }
 
 impl<'a> Lexer<'a> {
     pub fn new(source_input: &'a str) -> Self {
         Self {
-            source_input,
-            processors: Vec::new()
+            source_characters: RefCell::new(source_input.chars()),
+            processors: Vec::new(),
+            current_index: 0
         }
     }
 
-    pub fn get_processors(&mut self) -> &mut Vec<&'a dyn Fn(SymbolReader)> {
+    pub fn get_processors(&mut self) -> &mut Vec<&'a dyn Fn(SymbolReader) -> SymbolReader> {
         &mut self.processors
     }
 
     pub fn start(&mut self) {
         for func in &self.processors {
-            func.call((SymbolReader::new(),));
+            func.call((SymbolReader::new(self.current_index, self.source_characters.clone()),));
         }
     }
 }
